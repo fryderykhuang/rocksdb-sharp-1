@@ -6,7 +6,8 @@ SNAPPYVERSION=1.1.7
 
 # TODO: change snappy to latest 1.1.8, once we figure out where it's installing its headers now on OSX (see bellow)
 
-ROCKSDBREMOTE=https://github.com/facebook/rocksdb
+#ROCKSDBREMOTE=https://github.com/facebook/rocksdb
+ROCKSDBREMOTE=https://github.com/fryderykhuang/rocksdb
 SNAPPYREMOTE=https://github.com/google/snappy
 
 CONCURRENCY=8
