@@ -176,7 +176,7 @@ namespace RocksDbSharp
             }
         }
 
-        public KeyValuePair<byte[],byte[]>[] MultiGet(byte[][] keys, ColumnFamilyHandle[] cf = null, ReadOptions readOptions = null)
+        public KeyValuePair<byte[], byte[]>[] MultiGet(byte[][] keys, ColumnFamilyHandle[] cf = null, ReadOptions readOptions = null)
         {
             return Native.Instance.rocksdb_multi_get(Handle, (readOptions ?? DefaultReadOptions).Handle, keys);
         }
@@ -186,47 +186,94 @@ namespace RocksDbSharp
             return Native.Instance.rocksdb_multi_get(Handle, (readOptions ?? DefaultReadOptions).Handle, keys);
         }
 
-        public void Write(WriteBatch writeBatch, WriteOptions writeOptions = null)
+        public void Write(WriteBatch writeBatch, WriteOptions? writeOptions = null)
         {
             Native.Instance.rocksdb_write(Handle, (writeOptions ?? DefaultWriteOptions).Handle, writeBatch.Handle);
         }
 
-        public void Write(WriteBatchWithIndex writeBatch, WriteOptions writeOptions = null)
+        public void Write(WriteBatchWithIndex writeBatch, WriteOptions? writeOptions = null)
         {
             Native.Instance.rocksdb_write_writebatch_wi(Handle, (writeOptions ?? DefaultWriteOptions).Handle, writeBatch.Handle);
         }
 
-        public void Remove(string key, ColumnFamilyHandle cf = null, WriteOptions writeOptions = null)
+        public void Remove(string key, ColumnFamilyHandle cf, WriteOptions writeOptions = null)
         {
             Native.Instance.rocksdb_delete(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key, cf);
         }
 
-        public void Remove(byte[] key, ColumnFamilyHandle cf = null, WriteOptions writeOptions = null)
+        public void Remove(string key, WriteOptions writeOptions = null)
+        {
+            Native.Instance.rocksdb_delete(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key);
+        }
+
+        public void Remove(byte[] key, ColumnFamilyHandle cf, WriteOptions writeOptions = null)
         {
             Remove(key, key.Length, cf, writeOptions);
         }
 
-        public void Remove(byte[] key, long keyLength, ColumnFamilyHandle cf = null, WriteOptions writeOptions = null)
+        public void Remove(byte[] key, WriteOptions? writeOptions = null)
         {
-            if (cf == null)
-                Native.Instance.rocksdb_delete(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key, (UIntPtr)keyLength);
-            else
-                Native.Instance.rocksdb_delete_cf(Handle, (writeOptions ?? DefaultWriteOptions).Handle, cf.Handle, key, (UIntPtr)keyLength);
+            Remove(key, key.Length, writeOptions);
         }
 
-        public void Put(string key, string value, ColumnFamilyHandle cf = null, WriteOptions writeOptions = null, Encoding encoding = null)
+        public void Remove(byte[] key, long keyLength, ColumnFamilyHandle cf, WriteOptions? writeOptions = null)
         {
-            Native.Instance.rocksdb_put(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key, value, cf, encoding ?? DefaultEncoding);
+            Native.Instance.rocksdb_delete_cf(Handle, (writeOptions ?? DefaultWriteOptions).Handle, cf.Handle, key, (UIntPtr) keyLength);
         }
 
-        public void Put(byte[] key, byte[] value, ColumnFamilyHandle cf = null, WriteOptions writeOptions = null)
+        public void Remove(byte[] key, long keyLength, WriteOptions? writeOptions = null)
+        {
+            Native.Instance.rocksdb_delete(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key, (UIntPtr) keyLength);
+        }
+
+        public void Put(string key, string value, ColumnFamilyHandle cf, WriteOptions writeOptions, Encoding? encoding = null)
+        {
+            Native.Instance.rocksdb_put(Handle, writeOptions.Handle, key, value, cf, encoding);
+        }
+
+        public void Put(string key, string value, WriteOptions writeOptions, Encoding? encoding = null)
+        {
+            Native.Instance.rocksdb_put(Handle, writeOptions.Handle, key, value, encoding);
+        }
+
+        public void Put(string key, string value, ColumnFamilyHandle cf, Encoding? encoding = null)
+        {
+            Native.Instance.rocksdb_put(Handle, DefaultWriteOptions.Handle, key, value, cf, encoding);
+        }
+
+        public void Put(byte[] key, byte[] value, ColumnFamilyHandle cf, WriteOptions writeOptions)
         {
             Put(key, key.GetLongLength(0), value, value.GetLongLength(0), cf, writeOptions);
         }
 
-        public void Put(byte[] key, long keyLength, byte[] value, long valueLength, ColumnFamilyHandle cf = null, WriteOptions writeOptions = null)
+        public void Put(byte[] key, byte[] value, ColumnFamilyHandle cf)
         {
-            Native.Instance.rocksdb_put(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key, keyLength, value, valueLength, cf);
+            Put(key, key.GetLongLength(0), value, value.GetLongLength(0), cf);
+        }
+
+        public void Put(byte[] key, byte[] value, WriteOptions writeOptions)
+        {
+            Put(key, key.GetLongLength(0), value, value.GetLongLength(0), writeOptions);
+        }
+
+        public void Put(byte[] key, byte[] value)
+        {
+            Put(key, key.GetLongLength(0), value, value.GetLongLength(0));
+        }
+
+        public void Put(byte[] key, long keyLength, byte[] value, long valueLength, ColumnFamilyHandle cf, WriteOptions writeOptions)
+        {
+            Native.Instance.rocksdb_put(Handle, writeOptions.Handle, key, keyLength, value, valueLength, cf);
+        }
+
+        public void Put(byte[] key, long keyLength, byte[] value, long valueLength, ColumnFamilyHandle cf)
+        {
+            Native.Instance.rocksdb_put(Handle, (DefaultWriteOptions).Handle, key, keyLength, value, valueLength, cf);
+        }
+
+        public void Put(byte[] key, long keyLength, byte[] value, long valueLength, WriteOptions writeOptions = null)
+        {
+            Native.Instance.rocksdb_put(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key, keyLength, value, valueLength);
         }
 
         public Iterator NewIterator(ColumnFamilyHandle cf = null, ReadOptions readOptions = null)
@@ -269,7 +316,7 @@ namespace RocksDbSharp
             Native.Instance.rocksdb_drop_column_family(Handle, cf.Handle);
             columnFamilies.Remove(name);
         }
-        
+
         public ColumnFamilyHandle GetDefaultColumnFamily()
         {
             return GetColumnFamily(ColumnFamilies.DefaultName);
@@ -313,6 +360,84 @@ namespace RocksDbSharp
             if (encoding == null)
                 encoding = Encoding.UTF8;
             CompactRange(start == null ? null : encoding.GetBytes(start), limit == null ? null : encoding.GetBytes(limit), cf);
+        }
+
+        public void FlushWal(bool sync = false)
+        {
+            Native.Instance.rocksdb_flushwal(Handle, sync);
+        }
+
+        public IntPtr CreateSnapshotHandle()
+        {
+            return Native.Instance.rocksdb_create_snapshot(Handle);
+        }
+
+        public void ReleaseSnapshotHandle(IntPtr handle)
+        {
+            Native.Instance.rocksdb_release_snapshot(Handle, handle);
+        }
+
+        /// <summary>
+        /// CAUTION: Requires calling <see cref="FreeResultBuffer"/> after use.
+        /// </summary>
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(byte[] key, long keyLength, ColumnFamilyHandle cf, ReadOptions readOptions)
+        {
+            return Native.Instance.rocksdb_get_ptr(Handle, readOptions.Handle, key, keyLength, cf);
+        }
+
+        public void FreeResultBuffer(IntPtr resultBuffer)
+        {
+            Native.Instance.rocksdb_free(resultBuffer);
+        }
+
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(ReadOnlySpan<byte> key, ColumnFamilyHandle cf, ReadOptions readOptions)
+        {
+            return Native.Instance.rocksdb_get_ptr(Handle, readOptions.Handle, key, cf);
+        }
+
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(ReadOnlySpan<byte> key, ColumnFamilyHandle cf)
+        {
+            return Native.Instance.rocksdb_get_ptr(Handle, DefaultReadOptions.Handle, key, cf);
+        }
+
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(ReadOnlySpan<byte> key, ReadOptions readOptions)
+        {
+            return Native.Instance.rocksdb_get_ptr(Handle, readOptions.Handle, key);
+        }
+
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(ReadOnlySpan<byte> key)
+        {
+            return Native.Instance.rocksdb_get_ptr(Handle, DefaultReadOptions.Handle, key);
+        }
+
+        public void Remove(ReadOnlySpan<byte> key, ColumnFamilyHandle cf, WriteOptions writeOptions)
+        {
+            Native.Instance.rocksdb_delete_cf(Handle, writeOptions.Handle, key, cf);
+        }
+
+        public void Remove(ReadOnlySpan<byte> key, ColumnFamilyHandle cf)
+        {
+            Native.Instance.rocksdb_delete_cf(Handle, DefaultWriteOptions.Handle, key, cf);
+        }
+
+        public void Remove(ReadOnlySpan<byte> key, WriteOptions? writeOptions = null)
+        {
+            Native.Instance.rocksdb_delete(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key);
+        }
+
+        public void Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value, ColumnFamilyHandle cf, WriteOptions writeOptions)
+        {
+            Native.Instance.rocksdb_put(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key, value, cf);
+        }
+
+        public void Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value, ColumnFamilyHandle cf)
+        {
+            Native.Instance.rocksdb_put(Handle, DefaultWriteOptions.Handle, key, value, cf);
+        }
+
+        public void Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value, WriteOptions? writeOptions = null)
+        {
+            Native.Instance.rocksdb_put(Handle, (writeOptions ?? DefaultWriteOptions).Handle, key, value);
         }
     }
 }

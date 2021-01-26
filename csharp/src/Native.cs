@@ -6463,4 +6463,180 @@ namespace RocksDbSharp
 
     } // class Native
     #endregion // Transaction Options
+
+    public partial class Native
+    {
+        public abstract void rocksdb_flushwal(
+            /*rocksdb_t**/ IntPtr db, /*(unsigned char sync)*/ byte sync, out IntPtr errptr);
+
+        public abstract void rocksdb_options_set_manual_wal_flush(/* rocksdb_options_t* */ IntPtr options, byte value);
+
+        public unsafe void rocksdb_put(
+            rocksdb_t_ptr db,
+            const_rocksdb_writeoptions_t_ptr options,
+            in byte key,
+            size_t keylen,
+            in byte val,
+            size_t vallen,
+            out char_ptr_ptr errptr)
+        {
+            fixed (byte* pkey = &key)
+            fixed (byte* pVal = &val)
+                rocksdb_put(db, options, pkey, keylen, pVal, vallen, out errptr);
+        }
+
+
+        public unsafe void rocksdb_put_cf(
+            rocksdb_t_ptr db,
+            const_rocksdb_writeoptions_t_ptr options,
+            rocksdb_column_family_handle_t_ptr column_family,
+            in byte key,
+            size_t keylen,
+            in byte val,
+            size_t vallen,
+            out char_ptr_ptr errptr)
+        {
+            fixed (byte* pKey = &key)
+            fixed (byte* pVal = &val)
+                rocksdb_put_cf(db, options, column_family, pKey, keylen, pVal, vallen, out errptr);
+        }
+
+        public unsafe void rocksdb_delete(
+    rocksdb_t_ptr db,
+    const_rocksdb_writeoptions_t_ptr options,
+    in byte key,
+    size_t keylen,
+    out char_ptr_ptr errptr)
+        {
+            fixed (byte* pKey = &key)
+                rocksdb_delete(db, options, pKey, keylen, out errptr);
+        }
+
+        public unsafe void rocksdb_delete_cf(
+    rocksdb_t_ptr db,
+    const_rocksdb_writeoptions_t_ptr options,
+    rocksdb_column_family_handle_t_ptr column_family,
+    in byte key,
+    size_t keylen,
+    out char_ptr_ptr errptr)
+        {
+            fixed (byte* pKey = &key)
+                rocksdb_delete_cf(db, options, column_family, pKey, keylen, out errptr);
+        }
+
+        public unsafe char_ptr rocksdb_get(
+    rocksdb_t_ptr db,
+    const_rocksdb_readoptions_t_ptr options,
+    in byte key,
+    size_t keylen,
+    out size_t vallen,
+    out char_ptr_ptr errptr)
+        {
+            fixed (byte* pKey = &key)
+                return rocksdb_get(db, options, pKey, keylen, out vallen, out errptr);
+        }
+
+        public unsafe char_ptr rocksdb_get_cf(
+    rocksdb_t_ptr db,
+    const_rocksdb_readoptions_t_ptr options,
+    rocksdb_column_family_handle_t_ptr column_family,
+    in byte key,
+    size_t keylen,
+    out size_t vallen,
+    out char_ptr_ptr errptr)
+        {
+            fixed (byte* pKey = &key)
+                return rocksdb_get_cf(db, options, column_family, pKey, keylen, out vallen, out errptr);
+        }
+
+        public unsafe void rocksdb_writebatch_put(
+    rocksdb_writebatch_t_ptr writebatch,
+    in byte key,
+    size_t klen,
+    in byte val,
+    size_t vlen)
+        {
+            fixed (byte* pKey = &key)
+            fixed (byte* pVal = &val)
+                rocksdb_writebatch_put(writebatch, pKey, klen, pVal, vlen);
+        }
+
+        public unsafe void rocksdb_writebatch_put_cf(
+    rocksdb_writebatch_t_ptr writebatch,
+    rocksdb_column_family_handle_t_ptr column_family,
+    in byte key,
+    size_t klen,
+    in byte val,
+    size_t vlen)
+        {
+            fixed (byte* pKey = &key)
+            fixed (byte* pVal = &val)
+                rocksdb_writebatch_put_cf(writebatch, column_family, pKey, klen, pVal, vlen);
+        }
+
+        public unsafe void rocksdb_writebatch_delete(
+    rocksdb_writebatch_t_ptr writebatch,
+    in byte key,
+    size_t klen)
+        {
+            fixed (byte* pKey = &key)
+                rocksdb_writebatch_delete(writebatch, pKey, klen);
+        }
+
+        public unsafe void rocksdb_writebatch_delete_cf(
+    rocksdb_writebatch_t_ptr writebatch,
+    rocksdb_column_family_handle_t_ptr column_family,
+    in byte key,
+    size_t klen)
+        {
+            fixed (byte* pKey = &key)
+                rocksdb_writebatch_delete_cf(writebatch, column_family, pKey, klen);
+        }
+
+        public unsafe void rocksdb_writebatch_wi_put(
+    rocksdb_writebatch_wi_t_ptr writebatch_wi,
+    in byte key,
+    size_t klen,
+    in byte val,
+    size_t vlen)
+        {
+            fixed (byte* pKey = &key)
+            fixed (byte* pVal = &val)
+                rocksdb_writebatch_wi_put(writebatch_wi, pKey, klen, pVal, vlen);
+        }
+
+        public unsafe void rocksdb_writebatch_wi_put_cf(
+            rocksdb_writebatch_wi_t_ptr writebatch_wi,
+            rocksdb_column_family_handle_t_ptr column_family,
+            in byte key,
+            size_t klen,
+            in byte val,
+            size_t vlen)
+        {
+            fixed (byte* pKey = &key)
+            fixed (byte* pVal = &val)
+                rocksdb_writebatch_wi_put_cf(writebatch_wi, column_family, pKey, klen, pVal, vlen);
+        }
+
+        public unsafe void rocksdb_writebatch_wi_delete(
+            rocksdb_writebatch_wi_t_ptr writebatch_wi,
+            in byte key,
+            size_t klen)
+        {
+            fixed (byte* pKey = &key)
+                rocksdb_writebatch_wi_delete(writebatch_wi, pKey, klen);
+        }
+
+        public unsafe void rocksdb_writebatch_wi_delete_cf(
+            rocksdb_writebatch_wi_t_ptr writebatch_wi,
+            rocksdb_column_family_handle_t_ptr column_family,
+            in byte key,
+            size_t klen)
+        {
+            fixed (byte* pKey = &key)
+                rocksdb_writebatch_wi_delete_cf(writebatch_wi, column_family, pKey, klen);
+
+        }
+    }
+
 } // namespace RocksDbSharp

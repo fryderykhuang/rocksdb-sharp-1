@@ -256,7 +256,7 @@ namespace RocksDbSharp
                 Native.Instance.rocksdb_writebatch_wi_delete_range_cf(handle, cf.Handle, startKey, (UIntPtr)sklen, endKey, (UIntPtr)eklen);
         }
 
-        public unsafe void DeleteRangev(int numKeys, IntPtr startKeysList, IntPtr startKeysListSizes, IntPtr endKeysList, IntPtr endKeysListSizes, ColumnFamilyHandle cf = null)
+        public void DeleteRangev(int numKeys, IntPtr startKeysList, IntPtr startKeysListSizes, IntPtr endKeysList, IntPtr endKeysListSizes, ColumnFamilyHandle cf = null)
         {
             if (cf == null)
                 Native.Instance.rocksdb_writebatch_wi_delete_rangev(handle, numKeys, startKeysList, startKeysListSizes, endKeysList, endKeysListSizes);
@@ -342,5 +342,57 @@ namespace RocksDbSharp
             => PutLogData(blob, len);
         IWriteBatch IWriteBatch.Iterate(IntPtr state, PutDelegate put, DeletedDelegate deleted)
             => Iterate(state, put, deleted);
+
+
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(RocksDb db, byte[] key, ulong keyLength, ColumnFamilyHandle? cf = null, OptionsHandle? options = null)
+        {
+            return Native.Instance.rocksdb_writebatch_wi_get_from_batch_and_db_ptr(Handle, db.Handle, (options ?? RocksDb.DefaultOptions).Handle, key, keyLength, cf);
+        }
+
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(RocksDb db, ReadOnlySpan<byte> key, ColumnFamilyHandle cf, OptionsHandle? options = null)
+        {
+            return Native.Instance.rocksdb_writebatch_wi_get_from_batch_and_db_ptr(Handle, db.Handle, (options ?? RocksDb.DefaultOptions).Handle, key, cf);
+        }
+
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(RocksDb db, ReadOnlySpan<byte> key, OptionsHandle? options = null)
+        {
+            return Native.Instance.rocksdb_writebatch_wi_get_from_batch_and_db_ptr(Handle, db.Handle, (options ?? RocksDb.DefaultOptions).Handle, key);
+        }
+
+        public (IntPtr resultBuffer, UIntPtr length) GetUnsafe(byte[] key, ulong keyLength, ColumnFamilyHandle? cf = null, ReadOptions? options = null)
+        {
+            return Native.Instance.rocksdb_writebatch_wi_get_from_batch_ptr(Handle, (options ?? RocksDb.DefaultReadOptions).Handle, key, keyLength, cf);
+        }
+
+        public WriteBatchWithIndex Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> val, ColumnFamilyHandle cf)
+        {
+            Native.Instance.rocksdb_writebatch_wi_put_cf(handle, cf.Handle, key.GetPinnableReference(), (UIntPtr) key.Length, val.GetPinnableReference(),
+                (UIntPtr) val.Length);
+            return this;
+        }
+
+        public WriteBatchWithIndex Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> val)
+        {
+            Native.Instance.rocksdb_writebatch_wi_put(handle, key.GetPinnableReference(), (UIntPtr) key.Length, val.GetPinnableReference(), (UIntPtr) val.Length);
+            return this;
+        }
+
+        public WriteBatchWithIndex Delete(ReadOnlySpan<byte> key, ColumnFamilyHandle cf)
+        {
+            Native.Instance.rocksdb_writebatch_wi_delete_cf(handle, cf.Handle, key.GetPinnableReference(), (UIntPtr) key.Length);
+            return this;
+        }
+
+        public WriteBatchWithIndex Delete(ReadOnlySpan<byte> key)
+        {
+            Native.Instance.rocksdb_writebatch_wi_delete(handle, key.GetPinnableReference(), (UIntPtr) key.Length);
+            return this;
+        }
+
+        IWriteBatch IWriteBatch.Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> val, ColumnFamilyHandle cf)
+            => Put(key, val, cf);
+
+        IWriteBatch IWriteBatch.Delete(ReadOnlySpan<byte> key, ColumnFamilyHandle cf)
+            => Delete(key, cf);
     }
 }

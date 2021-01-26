@@ -33,9 +33,12 @@ namespace RocksDbSharp
         byte[] ToBytes(byte[] buffer, int offset = 0, int size = -1);
         void SetSavePoint();
         void RollbackToSavePoint();
+
+        IWriteBatch Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> val, ColumnFamilyHandle cf = null);
+        IWriteBatch Delete(ReadOnlySpan<byte> key, ColumnFamilyHandle cf = null);
     }
 
-    public class WriteBatch : IWriteBatch, IDisposable
+        public class WriteBatch : IWriteBatch, IDisposable
     {
         private IntPtr handle;
         private Encoding defaultEncoding = Encoding.UTF8;
@@ -298,5 +301,29 @@ namespace RocksDbSharp
             => PutLogData(blob, len);
         IWriteBatch IWriteBatch.Iterate(IntPtr state, PutDelegate put, DeletedDelegate deleted)
             => Iterate(state, put, deleted);
+
+        public WriteBatch Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> val, ColumnFamilyHandle cf = null)
+        {
+            if (cf == null)
+                Native.Instance.rocksdb_writebatch_put(handle, key, val);
+            else
+                Native.Instance.rocksdb_writebatch_put_cf(handle, cf.Handle, key, val);
+            return this;
+        }
+
+        public WriteBatch Delete(ReadOnlySpan<byte> key, ColumnFamilyHandle cf = null)
+        {
+            if (cf == null)
+                Native.Instance.rocksdb_writebatch_delete(handle, key.GetPinnableReference(), (UIntPtr)key.Length);
+            else
+                Native.Instance.rocksdb_writebatch_delete_cf(handle, cf.Handle, key.GetPinnableReference(), (UIntPtr)key.Length);
+            return this;
+        }
+
+        IWriteBatch IWriteBatch.Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> val, ColumnFamilyHandle cf)
+    => Put(key, val, cf);
+
+        IWriteBatch IWriteBatch.Delete(ReadOnlySpan<byte> key, ColumnFamilyHandle cf)
+    => Delete(key, cf);
     }
 }

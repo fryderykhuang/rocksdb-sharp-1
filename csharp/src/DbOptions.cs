@@ -611,5 +611,10 @@ namespace RocksDbSharp
             return this;
         }
 
+        public DbOptions SetManualFlush(bool value)
+        {
+            Native.Instance.rocksdb_options_set_manual_wal_flush(Handle, (byte)(value ? 1 : 0));
+            return this;
+        }
     }
 }

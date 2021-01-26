@@ -150,5 +150,16 @@ namespace RocksDbSharp
         }
 
         // TODO: figure out how to best implement rocksdb_iter_get_error
+
+
+        public Span<byte> KeySpan()
+        {
+            return Native.Instance.rocksdb_iter_key_span(handle);
+        }
+
+        public Span<byte> ValueSpan()
+        {
+            return Native.Instance.rocksdb_iter_value_span(handle);
+        }
     }
 }

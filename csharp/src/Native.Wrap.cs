@@ -17,10 +17,22 @@ namespace RocksDbSharp
             /*const rocksdb_writeoptions_t**/ IntPtr writeOptions,
             string key,
             string val,
-            ColumnFamilyHandle cf = null,
-            System.Text.Encoding encoding = null)
+            ColumnFamilyHandle cf,
+            System.Text.Encoding? encoding = null)
         {
             rocksdb_put(db, writeOptions, key, val, out IntPtr errptr, cf, encoding);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+        }
+
+        public void rocksdb_put(
+            /*rocksdb_t**/ IntPtr db,
+            /*const rocksdb_writeoptions_t**/ IntPtr writeOptions,
+            string key,
+            string val,
+            System.Text.Encoding? encoding = null)
+        {
+            rocksdb_put(db, writeOptions, key, val, out IntPtr errptr, encoding);
             if (errptr != IntPtr.Zero)
                 throw new RocksDbException(errptr);
         }
@@ -37,10 +49,23 @@ namespace RocksDbSharp
             IntPtr errptr;
             UIntPtr sklength = (UIntPtr)keyLength;
             UIntPtr svlength = (UIntPtr)valueLength;
-            if (cf == null)
-                rocksdb_put(db, writeOptions, key, sklength, value, svlength, out errptr);
-            else
-                rocksdb_put_cf(db, writeOptions, cf.Handle, key, sklength, value, svlength, out errptr);
+            rocksdb_put_cf(db, writeOptions, cf.Handle, key, sklength, value, svlength, out errptr);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+        }
+
+        public void rocksdb_put(
+            IntPtr db,
+            IntPtr writeOptions,
+            byte[] key,
+            long keyLength,
+            byte[] value,
+            long valueLength)
+        {
+            IntPtr errptr;
+            UIntPtr sklength = (UIntPtr)keyLength;
+            UIntPtr svlength = (UIntPtr)valueLength;
+            rocksdb_put(db, writeOptions, key, sklength, value, svlength, out errptr);
             if (errptr != IntPtr.Zero)
                 throw new RocksDbException(errptr);
         }
@@ -130,6 +155,16 @@ namespace RocksDbSharp
             ColumnFamilyHandle cf)
         {
             rocksdb_delete(db, writeOptions, key, out IntPtr errptr, cf);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+        }
+
+        public void rocksdb_delete(
+            /*rocksdb_t**/ IntPtr db,
+            /*const rocksdb_writeoptions_t**/ IntPtr writeOptions,
+            /*const*/ string key)
+        {
+            rocksdb_delete(db, writeOptions, key, out IntPtr errptr);
             if (errptr != IntPtr.Zero)
                 throw new RocksDbException(errptr);
         }
@@ -292,6 +327,173 @@ namespace RocksDbSharp
             if (errptr != IntPtr.Zero)
                 throw new RocksDbException(errptr);
             return result;
+        }
+
+        public void rocksdb_flushwal(
+            /*rocksdb_t**/ IntPtr db, bool sync)
+        {
+            rocksdb_flushwal(db, (byte)(sync ? 1 : 0), out IntPtr errptr);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+        }
+
+        public (IntPtr, UIntPtr) rocksdb_get_ptr(
+            IntPtr db,
+            IntPtr read_options,
+            byte[] key,
+            long keyLength = 0,
+            ColumnFamilyHandle cf = null)
+        {
+            var result = rocksdb_get_ptr(db, read_options, key, keyLength == 0 ? key.Length : keyLength, out IntPtr errptr, cf);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+            return result;
+        }
+
+        public (IntPtr, UIntPtr) rocksdb_writebatch_wi_get_from_batch_and_db_ptr(
+            IntPtr wb,
+            IntPtr db,
+            IntPtr read_options,
+            byte[] key,
+            ulong keyLength = 0,
+            ColumnFamilyHandle? cf = null)
+        {
+            var result = rocksdb_writebatch_wi_get_from_batch_and_db_ptr(wb, db, read_options, key, keyLength == 0 ? (ulong)key.Length : keyLength, out IntPtr errptr, cf);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+            return result;
+        }
+
+        public (IntPtr, UIntPtr) rocksdb_writebatch_wi_get_from_batch_and_db_ptr(
+            IntPtr wb,
+            IntPtr db,
+            IntPtr read_options,
+            ReadOnlySpan<byte> key,
+            ColumnFamilyHandle cf)
+        {
+            var result = rocksdb_writebatch_wi_get_from_batch_and_db_ptr(wb, db, read_options, key, out IntPtr errptr, cf);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+            return result;
+        }
+
+        public (IntPtr, UIntPtr) rocksdb_writebatch_wi_get_from_batch_and_db_ptr(
+            IntPtr wb,
+            IntPtr db,
+            IntPtr read_options,
+            ReadOnlySpan<byte> key)
+        {
+            var result = rocksdb_writebatch_wi_get_from_batch_and_db_ptr(wb, db, read_options, key, out IntPtr errptr);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+            return result;
+        }
+
+        public unsafe Span<byte> rocksdb_iter_key_span(IntPtr iterator)
+        {
+            IntPtr buffer = rocksdb_iter_key(iterator, out UIntPtr length);
+
+            // Do not free, this is owned by the iterator and will be freed there
+            //rocksdb_free(buffer);
+            return new Span<byte>(buffer.ToPointer(), (int)length);
+        }
+
+        public unsafe Span<byte> rocksdb_iter_value_span(IntPtr iterator)
+        {
+            IntPtr buffer = rocksdb_iter_value(iterator, out UIntPtr length);
+            // Do not free, this is owned by the iterator and will be freed there
+            //rocksdb_free(buffer);
+            return new Span<byte>(buffer.ToPointer(), (int)length);
+        }
+
+        public (IntPtr, UIntPtr) rocksdb_writebatch_wi_get_from_batch_ptr(
+            IntPtr wb,
+            IntPtr read_options,
+            byte[] key,
+            ulong keyLength = 0,
+            ColumnFamilyHandle? cf = null)
+        {
+            var result = rocksdb_writebatch_wi_get_from_batch_ptr(wb, read_options, key, keyLength == 0 ? (ulong)key.Length : keyLength, out IntPtr errptr, cf);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+            return result;
+        }
+
+        public void rocksdb_put(
+            IntPtr db,
+            IntPtr writeOptions,
+            ReadOnlySpan<byte> key,
+            ReadOnlySpan<byte> value,
+            ColumnFamilyHandle cf)
+        {
+            IntPtr errptr;
+            UIntPtr sklength = (UIntPtr)key.Length;
+            UIntPtr svlength = (UIntPtr)value.Length;
+            if (cf == null)
+                rocksdb_put(db, writeOptions, key.GetPinnableReference(), sklength, value.GetPinnableReference(), svlength, out errptr);
+            else
+                rocksdb_put_cf(db, writeOptions, cf.Handle, key.GetPinnableReference(), sklength, value.GetPinnableReference(), svlength, out errptr);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+        }
+
+        public void rocksdb_put(
+            IntPtr db,
+            IntPtr writeOptions,
+            ReadOnlySpan<byte> key,
+            ReadOnlySpan<byte> value)
+        {
+            IntPtr errptr;
+            UIntPtr sklength = (UIntPtr)key.Length;
+            UIntPtr svlength = (UIntPtr)value.Length;
+            rocksdb_put(db, writeOptions, key.GetPinnableReference(), sklength, value.GetPinnableReference(), svlength, out errptr);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+        }
+
+        public (IntPtr, UIntPtr) rocksdb_get_ptr(
+            IntPtr db,
+            IntPtr read_options,
+            ReadOnlySpan<byte> key,
+            ColumnFamilyHandle cf)
+        {
+            var result = rocksdb_get_ptr(db, read_options, key, out IntPtr errptr, cf);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+            return result;
+        }
+
+        public (IntPtr, UIntPtr) rocksdb_get_ptr(
+            IntPtr db,
+            IntPtr read_options,
+            ReadOnlySpan<byte> key)
+        {
+            var result = rocksdb_get_ptr(db, read_options, key, out IntPtr errptr);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+            return result;
+        }
+
+        public void rocksdb_delete(
+            /*rocksdb_t**/ IntPtr db,
+            /*const rocksdb_writeoptions_t**/ IntPtr writeOptions,
+            /*const*/ ReadOnlySpan<byte> key)
+        {
+            UIntPtr sklength = (UIntPtr)key.Length;
+            rocksdb_delete(db, writeOptions, key.GetPinnableReference(), sklength, out IntPtr errptr);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
+        }
+
+        public void rocksdb_delete_cf(
+            /*rocksdb_t**/ IntPtr db,
+            /*const rocksdb_writeoptions_t**/ IntPtr writeOptions,
+            /*const*/ ReadOnlySpan<byte> key,
+            ColumnFamilyHandle cf)
+        {
+            rocksdb_delete_cf(db, writeOptions, cf.Handle, key.GetPinnableReference(), (UIntPtr)key.Length, out IntPtr errptr);
+            if (errptr != IntPtr.Zero)
+                throw new RocksDbException(errptr);
         }
     }
 }

@@ -125,5 +125,11 @@ namespace RocksDbSharp
             Native.Instance.rocksdb_readoptions_set_total_order_seek(Handle, enable);
             return this;
         }
+
+        public ReadOptions SetSnapshot(IntPtr snapshotHandle)
+        {
+            Native.Instance.rocksdb_readoptions_set_snapshot(Handle, snapshotHandle);
+            return this;
+        }
     }
 }
